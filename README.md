@@ -1,14 +1,24 @@
 # 🚀 Lab-1-ES — Repositórios Populares do GitHub
 
-> Coleta e análise das principais características dos 100 repositórios mais estrelados do GitHub usando a API GraphQL.
+> Coleta e análise das principais características dos **1.000 repositórios mais estrelados** do GitHub usando a API GraphQL, com exportação para CSV e JSON.
 
 ---
 
 ## 📋 Descrição
-Este projeto realiza a extração automatizada de dados dos 100 repositórios mais populares do GitHub, coletando métricas como linguagem principal, número de estrelas, issues, pull requests e releases. Os dados são salvos em um arquivo JSON para análise posterior.
+Este projeto realiza a extração automatizada dos **1.000 repositórios mais populares** do GitHub, coletando métricas detalhadas e derivadas, como:
+- Linguagem principal
+- Número de estrelas
+- Issues (abertas/fechadas)
+- Pull requests merged
+- Releases
+- Idade do repositório (anos)
+- Dias desde última atualização
+- Percentual de issues fechadas
+
+O sistema utiliza paginação GraphQL, busca em batches adaptativos e exporta os dados para **CSV** e **JSON** para análise posterior.
 
 ## 🛠️ Tecnologias Utilizadas
-- Python 3.7+
+- Python 3.8+
 - [python-dotenv](https://pypi.org/project/python-dotenv/)
 - [requests](https://pypi.org/project/requests/)
 
@@ -37,31 +47,48 @@ Este projeto realiza a extração automatizada de dados dos 100 repositórios ma
 	```
 
 5. **Saída:**
-	- O resultado será salvo em `top_100_repositories.json`.
+	- Dados detalhados em `top_1000_repositories.json`
+	- Exportação tabular em `top_1000_repositories.csv`
 
 ## 📁 Estrutura do Projeto
 ```
-├── scrapper.py           # Script principal de coleta
-├── top_100_repositories.json  # Saída dos dados coletados
-├── .env                  # Variáveis de ambiente (não versionado)
-└── README.md             # Documentação
+├── scrapper.py                  # Script principal de coleta e análise
+├── top_1000_repositories.json   # Dados brutos coletados (JSON)
+├── top_1000_repositories.csv    # Dados tabulares (CSV)
+├── .env                         # Variáveis de ambiente (não versionado)
+└── README.md                    # Documentação
 ```
 
-## 📝 Exemplo de Saída
+## 📝 Exemplos de Saída
+
+### JSON
 ```json
 [
-  {
-	 "nameWithOwner": "torvalds/linux",
-	 "createdAt": "2011-09-04T22:48:12Z",
-	 "updatedAt": "2026-02-22T10:00:00Z",
-	 "stargazerCount": 168000,
-	 "primaryLanguage": "C",
-	 "pullRequestsMerged": 12000,
-	 "releases": 500,
-	 "issuesClosed": 10000,
-	 "issuesTotal": 12000
-  },
-  ...
+	{
+		"id": "MDEwOlJlcG9zaXRvcnkxMjk2MjY5",
+		"nameWithOwner": "torvalds/linux",
+		"url": "https://github.com/torvalds/linux",
+		"createdAt": "2011-09-04T22:48:12Z",
+		"updatedAt": "2026-02-22T10:00:00Z",
+		"pushedAt": "2026-02-22T10:00:00Z",
+		"stargazerCount": 168000,
+		"primaryLanguage": "C",
+		"pullRequestsMerged": 12000,
+		"releases": 500,
+		"issuesClosed": 10000,
+		"issuesTotal": 12000,
+		"repoAgeYears": 14.5,
+		"daysSinceLastUpdate": 8,
+		"closedIssuesRatio": 0.8333
+	},
+	...
 ]
+```
+
+### CSV
+```
+id,nameWithOwner,url,createdAt,updatedAt,pushedAt,stargazerCount,primaryLanguage,pullRequestsMerged,releases,issuesClosed,issuesTotal,repoAgeYears,daysSinceLastUpdate,closedIssuesRatio
+MDEwOlJlcG9zaXRvcnkxMjk2MjY5,torvalds/linux,https://github.com/torvalds/linux,2011-09-04T22:48:12Z,2026-02-22T10:00:00Z,2026-02-22T10:00:00Z,168000,C,12000,500,10000,12000,14.5,8,0.8333
+...
 ```
 ---

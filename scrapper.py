@@ -1,4 +1,5 @@
 import os
+import csv
 import json
 import time
 import random
@@ -71,11 +72,21 @@ query RepoDetailsByIds($ids: [ID!]!) {
       updatedAt
       pushedAt
       stargazerCount
-      primaryLanguage { name }
-      mergedPRs: pullRequests(states: MERGED) { totalCount }
-      releases { totalCount }
-      closedIssues: issues(states: CLOSED) { totalCount }
-      totalIssues: issues { totalCount }
+      primaryLanguage {
+        name
+      }
+      mergedPRs: pullRequests(states: MERGED) {
+        totalCount
+      }
+      releases {
+        totalCount
+      }
+      closedIssues: issues(states: CLOSED) {
+        totalCount
+      }
+      totalIssues: issues {
+        totalCount
+      }
     }
   }
 }
@@ -237,8 +248,51 @@ def get_top_repositories_paginated(
     return all_repos[:total_repos]
 
 # -------------------------------------------------
-# Phase 2: fixed-size batched fetching
+# Phase 2: adaptive batch fetching
 # -------------------------------------------------
+def fetch_batch(ids: List[str]) -> List[Dict[str, Any]]:
+    data, headers = run_query(DETAILS_BY_IDS_QUERY, {"ids": ids})
+    nodes = data["data"]["nodes"]
+
+    results = []
+    for repo in nodes:
+        if repo is None:
+            continue
+        results.append(normalize_repo(repo))
+
+    print(
+        f"   ↳ Batch success | size={len(ids)} "
+    )
+
+    return results
+
+
+def fetch_batch_with_fallback(ids: List[str], depth: int = 0) -> List[Dict[str, Any]]:
+    indent = "  " * depth
+
+    try:
+        print(f"{indent}Trying batch of size {len(ids)}...")
+        result = fetch_batch(ids)
+        time.sleep(BATCH_THROTTLE_SECONDS)
+        return result
+
+    except Exception as e:
+        print(f"{indent}Batch size {len(ids)} failed: {e}")
+
+        if len(ids) == 1:
+            print(f"{indent}Skipping repo id {ids[0]} after repeated failures.")
+            return []
+
+        mid = len(ids) // 2
+        left_ids = ids[:mid]
+        right_ids = ids[mid:]
+
+        print(f"{indent}Splitting batch into {len(left_ids)} + {len(right_ids)}")
+        left_result = fetch_batch_with_fallback(left_ids, depth + 1)
+        right_result = fetch_batch_with_fallback(right_ids, depth + 1)
+        return left_result + right_result
+
+
 def fetch_repo_details_batched(
     repo_ids: List[str],
     batch_size: int = DETAIL_BATCH_SIZE
@@ -248,25 +302,42 @@ def fetch_repo_details_batched(
 
     for index, batch in enumerate(batches, 1):
         print(f"Fetching batch {index}/{len(batches)} (size={len(batch)})...")
-        data, headers = run_query(DETAILS_BY_IDS_QUERY, {"ids": batch})
-        nodes = data["data"]["nodes"]
-
-        for repo in nodes:
-            if repo is None:
-                continue
-            all_results.append(normalize_repo(repo))
-
-        print(
-            f"   ↳ Batch success | size={len(batch)} "
-        )
-
-        time.sleep(BATCH_THROTTLE_SECONDS)
+        batch_results = fetch_batch_with_fallback(batch)
+        all_results.extend(batch_results)
 
     return all_results
 
 # -------------------------------------------------
 # Output
 # -------------------------------------------------
+def save_to_csv(data: List[Dict[str, Any]], filename: str = "top_1000_repositories.csv") -> None:
+    if not data:
+        raise RuntimeError("No data to save.")
+
+    fieldnames = [
+        "id",
+        "nameWithOwner",
+        "url",
+        "createdAt",
+        "updatedAt",
+        "pushedAt",
+        "stargazerCount",
+        "primaryLanguage",
+        "pullRequestsMerged",
+        "releases",
+        "issuesClosed",
+        "issuesTotal",
+        "repoAgeYears",
+        "daysSinceLastUpdate",
+        "closedIssuesRatio",
+    ]
+
+    with open(filename, "w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(data)
+
+
 def save_to_json(data: List[Dict[str, Any]], filename: str = "top_1000_repositories.json") -> None:
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
@@ -287,12 +358,14 @@ def main():
     rank_map = {repo["id"]: idx for idx, repo in enumerate(top_repos)}
     results.sort(key=lambda repo: rank_map.get(repo["id"], 10**9))
 
-    print("Step 3: saving file...")
+    print("Step 3: saving files...")
+    save_to_csv(results, "top_1000_repositories.csv")
     save_to_json(results, "top_1000_repositories.json")
 
     print("Done.")
     print(f"Saved {len(results)} repositories.")
     print("Generated:")
+    print("- top_1000_repositories.csv")
     print("- top_1000_repositories.json")
 
 
