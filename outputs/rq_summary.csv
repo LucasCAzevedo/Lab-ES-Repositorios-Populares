@@ -1,0 +1,6 @@
+RQ,metric,description,median,mean
+RQ01,repoAgeYears,Repository age in years,8.35,8.1494
+RQ02,pullRequestsMerged,Accepted pull requests,746.0,3965.244
+RQ03,releases,Total releases,39.5,119.619
+RQ04,daysSinceLastUpdate,Days since last update,0.0,0.013
+RQ06,closedIssuesRatio,Closed issues ratio,0.88,0.8061
