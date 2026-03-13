@@ -17,7 +17,7 @@ O script atualizado permite:
 ---
 
 ## 🛠️ Tecnologias Utilizadas
-- Python 3.7+
+- Python 3.8+
 - [python-dotenv](https://pypi.org/project/python-dotenv/)
 - [requests](https://pypi.org/project/requests/)
 - [matplotlib](https://pypi.org/project/matplotlib/) *(opcional, apenas para gráficos)*
