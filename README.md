@@ -124,3 +124,21 @@ Ao final, você terá:
 - os arquivos de resposta da etapa analítica;
 - o bônus consolidado por linguagem;
 - os gráficos, caso `matplotlib` esteja instalado.
+
+---
+
+## 📊 Relatório Final
+
+O relatório final do laboratório, incluindo análise detalhada, tabelas e gráficos, está disponível em:
+
+- [outputs/relatorio_final_lab01.pdf](outputs/relatorio_final_lab01.pdf)
+
+O relatório inclui:
+- Introdução e hipóteses
+- Metodologia
+- Resultados das questões de pesquisa (medianas, médias, contagem de linguagens)
+- Discussão e análise crítica
+- Bônus: análise por linguagem (RQ07)
+- Gráficos gerados automaticamente
+
+Para visualizar os gráficos separadamente, consulte também os arquivos `.png` na pasta `outputs/`.
